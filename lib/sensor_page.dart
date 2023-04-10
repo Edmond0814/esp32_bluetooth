@@ -20,7 +20,8 @@ class SensorPageState extends State<SensorPage> {
   bool isReady = false;
   int _currentIndex = 0;
   Stream<List<int>>? stream;
-  List<double> traceDust = [];
+  List<String> traceDust = [];
+  bool isStoringData = false;
 
   @override
   void initState() {
@@ -131,29 +132,62 @@ class SensorPageState extends State<SensorPage> {
                   if (snapshot.connectionState == ConnectionState.active) {
                     var currentValue = _dataParser(snapshot.data ?? []);
 
-                    if (currentValue.isNotEmpty) {
-                      traceDust.add(double.tryParse(currentValue) ?? 0);
+                    if (currentValue.isNotEmpty && isStoringData) {
+                      traceDust.add(currentValue);
                     }
 
-                    return Center(
-                        child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
+                    return Column(
+                      children: [
                         Expanded(
-                          flex: 1,
-                          child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: <Widget>[
-                                const Text('Current value from Sensor',
-                                    style: TextStyle(fontSize: 14)),
-                                Text('$currentValue ug/m3',
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 24))
-                              ]),
+                            child: traceDust.isNotEmpty
+                                ? ListView.builder(
+                                    itemCount: traceDust.length,
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                      return Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                            traceDust[
+                                                traceDust.length - 1 - index],
+                                            style:
+                                                const TextStyle(fontSize: 16)),
+                                      );
+                                    },
+                                  )
+                                : Container()),
+                        Padding(
+                          padding: const EdgeInsetsDirectional.symmetric(
+                              vertical: 10),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                ElevatedButton(
+                                    onPressed: () {
+                                      isStoringData = true;
+                                    },
+                                    child: const Text("start")),
+                                ElevatedButton(
+                                    onPressed: () {
+                                      isStoringData = false;
+                                    },
+                                    child: const Text("stop")),
+                                ElevatedButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        traceDust.clear();
+                                      });
+                                    },
+                                    child: const Text("clear")),
+                                ElevatedButton(
+                                    onPressed: () {}, child: const Text("save"))
+                              ],
+                            ),
+                          ),
                         )
                       ],
-                    ));
+                    );
                   } else {
                     return const Text('Check the stream');
                   }
