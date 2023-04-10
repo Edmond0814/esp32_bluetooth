@@ -5,6 +5,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'widgets.dart';
 
 class SensorPage extends StatefulWidget {
   const SensorPage({Key? key, required this.device}) : super(key: key);
@@ -22,6 +23,10 @@ class SensorPageState extends State<SensorPage> {
   Stream<List<int>>? stream;
   List<String> traceDust = [];
   bool isStoringData = false;
+  bool viewSavedData = false;
+  List<List<String>> savedDataList = [];
+
+  List<int> selectedDataIndices = [];
 
   @override
   void initState() {
@@ -107,6 +112,40 @@ class SensorPageState extends State<SensorPage> {
     return '';
   }
 
+  // void _showSavedData(BuildContext context) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         content: Container(
+  //           width: double.maxFinite,
+  //           child: ListView.builder(
+  //             shrinkWrap: true,
+  //             itemCount: savedDataList.length,
+  //             itemBuilder: (BuildContext context, int index) {
+  //               return ExpansionTile(
+  //                 title: Text('Saved Data ${index + 1}'),
+  //                 children: savedDataList[index]
+  //                     .map<Widget>(
+  //                         (value) => ListTile(title: Text('$value ug/m3')))
+  //                     .toList(),
+  //               );
+  //             },
+  //           ),
+  //         ),
+  //         actions: <Widget>[
+  //           TextButton(
+  //             child: const Text('Close'),
+  //             onPressed: () {
+  //               Navigator.of(context).pop();
+  //             },
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -140,52 +179,126 @@ class SensorPageState extends State<SensorPage> {
                       children: [
                         Expanded(
                             child: traceDust.isNotEmpty
-                                ? ListView.builder(
-                                    itemCount: traceDust.length,
-                                    itemBuilder:
-                                        (BuildContext context, int index) {
-                                      return Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Text(
-                                            traceDust[
-                                                traceDust.length - 1 - index],
-                                            style:
-                                                const TextStyle(fontSize: 16)),
-                                      );
-                                    },
-                                  )
+                                ? viewSavedData
+                                    ? ListView.builder(
+                                        itemCount: savedDataList.length,
+                                        itemBuilder:
+                                            (BuildContext context, int index) {
+                                          return CustomExpansionTile(
+                                            key: ValueKey(index),
+                                            isInitiallyExpanded:
+                                                selectedDataIndices
+                                                    .contains(index),
+                                            title:
+                                                Text('Saved Data ${index + 1}'),
+                                            trailing: IconButton(
+                                              icon: const Icon(Icons.delete),
+                                              onPressed: () async {
+                                                final bool? shouldDelete =
+                                                    await showDialog<bool>(
+                                                  context: context,
+                                                  builder:
+                                                      (BuildContext context) {
+                                                    return AlertDialog(
+                                                      title: const Text(
+                                                          'Delete Confirmation'),
+                                                      content: const Text(
+                                                          'Are you sure you want to delete this data?'),
+                                                      actions: <Widget>[
+                                                        TextButton(
+                                                          child: const Text(
+                                                              'Cancel'),
+                                                          onPressed: () =>
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop(false),
+                                                        ),
+                                                        TextButton(
+                                                          child: const Text(
+                                                              'Delete'),
+                                                          onPressed: () =>
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop(true),
+                                                        ),
+                                                      ],
+                                                    );
+                                                  },
+                                                );
+
+                                                if (shouldDelete == true) {
+                                                  setState(() {
+                                                    savedDataList
+                                                        .removeAt(index);
+                                                  });
+                                                }
+                                              },
+                                            ),
+                                            children: savedDataList[index]
+                                                .map<Widget>((value) =>
+                                                    ListTile(
+                                                        title: Text(
+                                                            '$value ug/m3')))
+                                                .toList(),
+                                          );
+                                        },
+                                      )
+                                    : ListView.builder(
+                                        itemCount: traceDust.length,
+                                        itemBuilder:
+                                            (BuildContext context, int index) {
+                                          return Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                                traceDust[traceDust.length -
+                                                    1 -
+                                                    index],
+                                                style: const TextStyle(
+                                                    fontSize: 16)),
+                                          );
+                                        },
+                                      )
                                 : Container()),
-                        Padding(
-                          padding: const EdgeInsetsDirectional.symmetric(
-                              vertical: 10),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                ElevatedButton(
-                                    onPressed: () {
-                                      isStoringData = true;
-                                    },
-                                    child: const Text("start")),
-                                ElevatedButton(
-                                    onPressed: () {
-                                      isStoringData = false;
-                                    },
-                                    child: const Text("stop")),
-                                ElevatedButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        traceDust.clear();
-                                      });
-                                    },
-                                    child: const Text("clear")),
-                                ElevatedButton(
-                                    onPressed: () {}, child: const Text("save"))
-                              ],
-                            ),
-                          ),
-                        )
+                        viewSavedData
+                            ? Container()
+                            : Padding(
+                                padding: const EdgeInsetsDirectional.symmetric(
+                                    vertical: 10),
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      ElevatedButton(
+                                          onPressed: () {
+                                            isStoringData = true;
+                                          },
+                                          child: const Text("start")),
+                                      ElevatedButton(
+                                          onPressed: () {
+                                            isStoringData = false;
+                                          },
+                                          child: const Text("stop")),
+                                      ElevatedButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              traceDust.clear();
+                                            });
+                                          },
+                                          child: const Text("clear")),
+                                      ElevatedButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              savedDataList
+                                                  .add(List.from(traceDust));
+                                            });
+                                          },
+                                          child: const Text("save"))
+                                    ],
+                                  ),
+                                ),
+                              )
                       ],
                     );
                   } else {
@@ -207,6 +320,7 @@ class SensorPageState extends State<SensorPage> {
         ],
         currentIndex: _currentIndex,
         onTap: (int index) {
+          viewSavedData = index == 1 ? true : false;
           setState(() {
             _currentIndex = index;
           });
