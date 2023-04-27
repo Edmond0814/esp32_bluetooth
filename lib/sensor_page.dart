@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert' show utf8;
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -112,40 +111,6 @@ class SensorPageState extends State<SensorPage> {
     return '';
   }
 
-  // void _showSavedData(BuildContext context) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         content: Container(
-  //           width: double.maxFinite,
-  //           child: ListView.builder(
-  //             shrinkWrap: true,
-  //             itemCount: savedDataList.length,
-  //             itemBuilder: (BuildContext context, int index) {
-  //               return ExpansionTile(
-  //                 title: Text('Saved Data ${index + 1}'),
-  //                 children: savedDataList[index]
-  //                     .map<Widget>(
-  //                         (value) => ListTile(title: Text('$value ug/m3')))
-  //                     .toList(),
-  //               );
-  //             },
-  //           ),
-  //         ),
-  //         actions: <Widget>[
-  //           TextButton(
-  //             child: const Text('Close'),
-  //             onPressed: () {
-  //               Navigator.of(context).pop();
-  //             },
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -237,8 +202,7 @@ class SensorPageState extends State<SensorPage> {
                                             children: savedDataList[index]
                                                 .map<Widget>((value) =>
                                                     ListTile(
-                                                        title: Text(
-                                                            '$value ug/m3')))
+                                                        title: Text(value)))
                                                 .toList(),
                                           );
                                         },
